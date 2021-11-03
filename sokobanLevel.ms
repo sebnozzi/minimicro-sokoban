@@ -1,5 +1,3 @@
-// TODO: implement tile lookup using maps
-// TODO: implement flooding non-recursively
 
 // Define some variables
 
@@ -78,7 +76,8 @@ end function
 LEVEL.originY = function()
 	return (640/2)-self.tileSize*(LEVEL.rowCount/2)
 end function
-LEVEL.structureTiles = []
+// Map of Position => StructureTile
+LEVEL.structureTiles = {}
 LEVEL.boxes = []
 LEVEL.worker = null
 
@@ -132,7 +131,7 @@ TargetTile.isTargetTile = true
 LEVEL.addStructureTile = function(structureClass,position)
 	structureTile = new structureClass
 	structureTile.position = position
-	self.structureTiles.push(structureTile)
+	self.structureTiles[position] = structureTile
 end function
 LEVEL.addFloorAt = function(position)
 	self.addStructureTile(FloorTile,position)
@@ -142,20 +141,6 @@ LEVEL.addTargetAt = function(position)
 end function
 LEVEL.addWallAt = function(position)
 	self.addStructureTile(WallTile,position)
-end function
-
-// Removing
-
-LEVEL.removeTileAt = function(position)
-	tileToRemove = null
-	for tile in self.structureTiles
-		if tile.isAtPosition(position) then
-			tileToRemove = tile
-		end if
-	end for
-	if tileToRemove != null then
-		// self.structureTiles.remove(tileToRemove)
-	end if
 end function
 
 // Adding/setting sprite objects
@@ -212,7 +197,7 @@ end function
 
 LEVEL.hasFreeTileAt = function(position)
 	// Try to prove wrong ... look for walls or boxes
-	objects = self.boxes + self.structureTiles
+	objects = self.boxes + self.structureTiles.values
 	// Try to find object at position, and ask if we can move there
 	// Only floors and targets can be moved into
 	for object in objects
@@ -226,7 +211,7 @@ end function
 
 LEVEL.getTargetTiles = function()
 	tiles = []
-	for tile in self.structureTiles
+	for tile in self.structureTiles.values
 		if tile.isTargetTile then
 			tiles.push tile
 		end if
@@ -244,20 +229,18 @@ LEVEL.hasTargetTileAt = function(position)
 end function
 
 LEVEL.hasFloorOrTargetTileAt = function(position)
-	for tile in self.structureTiles
-		if tile.isAtPosition(position) then
-			return tile.isTargetTile or tile.isFloorTile
-		end if
-	end for
+	if self.structureTiles.hasIndex(position) then
+		tile = self.structureTiles[position]
+		return tile.isTargetTile or tile.isFloorTile
+	end if
 	return false
 end function
 
 LEVEL.hasWallTileAt = function(position)
-	for tile in self.structureTiles
-		if tile.isAtPosition(position) then
-			return tile.isWallTile
-		end if
-	end for
+	if self.structureTiles.hasIndex(position) then
+		tile = self.structureTiles[position]
+		return tile.isWallTile
+	end if
 	return false
 end function
 
@@ -276,7 +259,7 @@ end function
 
 LEVEL.drawTiles = function()
 	// Draw the individual tiles
-	for tile in self.structureTiles
+	for tile in self.structureTiles.values
 		tile.drawFromOrigin
 	end for
 end function
@@ -423,9 +406,6 @@ end function
 
 placeTargetTiles = function(level, targetTilePositions)
 	for position in targetTilePositions
-		level.removeTileAt position
-	end for
-	for position in targetTilePositions
 		level.addTargetAt position
 	end for
 end function
@@ -438,7 +418,7 @@ end function
 LEVEL.initializeFromData = function(levelData)
 	// Reset fields
 	self.boxes = []
-	self.structureTiles = []
+	self.structureTiles = {}
 	// Initialize level dimensions
 	self.rowCount=len(levelData)
 	for levelLine in levelData
@@ -566,13 +546,13 @@ end function
 
 if globals == locals then
 	levelData = [
-	  "#########",
-	  "#..   $ #",
-	  "#..     #",
-	  "### $   ##",
-	  "# $  @ $ #",
-	  "#   ##   #",
-	  "##########"]
+	"#########",
+	"#..   $ #",
+	"#..     #",
+	"### $   ##",
+	"# $  @ $ #",
+	"#   ##   #",
+	"##########"]
 	firstLevel = [
 	"    #####", 
 	"    #   #", 
