@@ -488,6 +488,7 @@ LEVEL.initializeFromData = function(levelData)
 	// After flooding everything with floor-tiles, make
 	// place for the target tiles
 	placeTargetTiles(self, targetTilePositions)
+	
 	// Draw level tiles
 	self.drawTiles()
 	// Add sprites
@@ -498,6 +499,11 @@ LEVEL.initializeFromData = function(levelData)
 		self.addPlacedBoxAt position
 	end for
 	self.addWorkerAt workerPosition
+	
+	// TODO: this is ugly - it assumes things about the 
+	// "parent" game which is not "supposed" to know
+	// Clean text overlay display
+	display(2).clear
 end function
 
 // MAIN LOOP

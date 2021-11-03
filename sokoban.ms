@@ -52,20 +52,23 @@ clearDisplays = function()
 	text.row = 25
 end function
 
-showOverlayMsg = function(msg,x)
+showOverlayMsg = function(msg,x,blackDisplay=false)
+	if blackDisplay then
+		textOverlayDisp.clear(color.black)
+	end if
 	textOverlayDisp.print(
-	  msg,
-	  x,320,
-	  color.white,
-	  "large")
+	msg,
+	x,320,
+	color.white,
+	"large")
 end function
 
 showLevelText = function(levelNr)
 	textOverlayDisp.print(
-	  "Level "+levelNr,
-	  820,10,
-	  color.gray,
-	  "normal")
+	"Level "+levelNr,
+	820,10,
+	color.gray,
+	"normal")
 end function
 
 // === Play modes ===
@@ -102,9 +105,9 @@ end function
 
 showLevel = function(levelNr)
 	clearDisplays
-	showOverlayMsg("Level "+levelNr,380)
+	
+	showOverlayMsg("Level "+levelNr,380,true)
 	wait(1.5)
-	textOverlayDisp.clear
 end function
 
 showSolvedAll = function()
