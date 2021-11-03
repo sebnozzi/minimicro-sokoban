@@ -1,7 +1,7 @@
 
 # Sokoban for the Mini Micro
 
-This is a Sokoban implementation for the [Mini Micro](https://miniscript.org/MiniMicro/index.html), done for education purposes but mostly for fun.
+This is a Sokoban implementation for the [Mini Micro](https://miniscript.org/MiniMicro/index.html) virtual computer, done for education purposes but mostly for fun.
 
 It was done while learning to code for the Mini Micro and get familiar with the MiniScript language.
 
