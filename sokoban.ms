@@ -1,6 +1,7 @@
 import "sokobanLevel"
 
-LEVELS_FILE = "original-levels.txt"
+ORIGINAL_LEVELS_FILE = "original-levels.txt"
+MICROBAN_LEVELS_FILE = "microban.txt"
 
 // === Loading of levels ===
 
@@ -73,17 +74,36 @@ end function
 
 // === Play modes ===
 
-MODE_ASKING_LEVEL=1
-MODE_SHOWING_LEVEL=2
-MODE_PLAYING=3
-MODE_SOLVED_ALL=4
+MODE_ASKING_LEVELSET=1
+MODE_ASKING_LEVEL=2
+MODE_SHOWING_LEVEL=3
+MODE_PLAYING=4
+MODE_SOLVED_ALL=5
 
-askLevel = function()
-	clearDisplays
-	
+askLevelSet = function()
+	print "Which levelset do you want?"
+	print "1. Original levels"
+	print "2. Microban levels"
+	print "Press ENTER for original"
+	levelSetStr = input("Choose levelset nr.: ")
+	levelSetNr = levelSetStr.val
+	if levelSetNr == 0 or levelSetNr == 1 then
+		return ORIGINAL_LEVELS_FILE
+	else if levelSetNr == 2 then
+		return MICROBAN_LEVELS_FILE
+	else
+		print "Invalid choice"
+		print "Choosing originals for you .."
+		return ORIGINAL_LEVELS_FILE
+	end if	
+end function
+
+askLevel = function()	
 	levelCount = len(ALL_LEVELS)
+	print
+	print "Start from which level?"
 	print "Choose 1-"+levelCount+". Press ENTER for 1."
-	levelStr = input("Start from level? ")
+	levelStr = input("Level to start: ")
 	levelNr = levelStr.val
 	if levelNr == 0 then
 		return 1
@@ -123,12 +143,17 @@ end function
 
 // === MAIN LOOP ===
 
-ALL_LEVELS = loadLevels(LEVELS_FILE)
-currentMode = MODE_ASKING_LEVEL
+ALL_LEVELS = []
+currentMode = MODE_ASKING_LEVELSET
 levelNr = 1
 
+clearDisplays
 while true
-	if currentMode == MODE_ASKING_LEVEL then
+	if currentMode == MODE_ASKING_LEVELSET then
+		levelsFile = askLevelSet
+		ALL_LEVELS = loadLevels(levelsFile)
+		currentMode = MODE_ASKING_LEVEL
+	else 		if currentMode == MODE_ASKING_LEVEL then
 		levelNr = askLevel
 		currentMode = MODE_SHOWING_LEVEL
 	else if currentMode == MODE_SHOWING_LEVEL then
