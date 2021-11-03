@@ -499,11 +499,6 @@ LEVEL.initializeFromData = function(levelData)
 		self.addPlacedBoxAt position
 	end for
 	self.addWorkerAt workerPosition
-	
-	// TODO: this is ugly - it assumes things about the 
-	// "parent" game which is not "supposed" to know
-	// Clean text overlay display
-	display(2).clear
 end function
 
 // MAIN LOOP
@@ -515,10 +510,13 @@ KEY_RIGHT = 18
 KEY_UP = 19
 KEY_DOWN = 20
 
-playLevel = function(levelData)
-	clearDisplays
+playLevel = function(levelData,beforePlayingCallback=null)
 	
 	LEVEL.initializeFromData(levelData)
+	
+	if beforePlayingCallback != null then
+		beforPlayingCallback
+	end if
 	
 	key.clear
 	while true
@@ -552,14 +550,6 @@ end function
 
 if globals == locals then
 	levelData = [
-	"#########",
-	"#..   $ #",
-	"#..     #",
-	"### $   ##",
-	"# $  @ $ #",
-	"#   ##   #",
-	"##########"]
-	firstLevel = [
 	"    #####", 
 	"    #   #", 
 	"    #   #", 
@@ -571,7 +561,7 @@ if globals == locals then
 	"##### ### #@##  **#", 
 	"    #     #########", 
 	"    #######"]
-	levelData = firstLevel
+	clearDisplays
 	playLevel(levelData)
 	if LEVEL.isSolved then
 		print "Solved!"

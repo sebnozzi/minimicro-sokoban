@@ -95,19 +95,26 @@ askLevel = function()
 end function
 
 playLevel = function(levelNr)
+	beforePlaying = function()
+		textOverlayDisp.clear
+		showLevelText(levelNr)
+	end function
+	
 	levelIdx = levelNr - 1
 	levelData = ALL_LEVELS[levelIdx]
-	showLevelText(levelNr)
-	sokobanLevel.playLevel(levelData)
+	// NOTE: we pass a *reference* to the function
+	// Without the "@" we would be calling the function
+	// here, *before* calling "playLevel"
+	sokobanLevel.playLevel(levelData,@beforePlaying)
+	
 	showOverlayMsg("Solved!",380)
 	wait(2)
 end function
 
 showLevel = function(levelNr)
 	clearDisplays
-	
 	showOverlayMsg("Level "+levelNr,380,true)
-	wait(1.5)
+	wait(1)
 end function
 
 showSolvedAll = function()
