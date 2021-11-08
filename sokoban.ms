@@ -1,3 +1,8 @@
+if not file.exists("./sokobanLevel.ms") then 
+	print "Please navigate to the sokoban directory before running"
+	exit
+end if
+
 import "sokobanLevel"
 
 ORIGINAL_LEVELS_FILE = "original-levels.txt"
