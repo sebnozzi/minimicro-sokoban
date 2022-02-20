@@ -386,6 +386,7 @@ end function
 FLOOR_CHAR=" "
 WALL_CHAR="#"
 PLAYER_CHAR="@"
+PLAYER_ON_TARGET_CHAR="+"
 TARGET_CHAR="."
 BOX_CHAR="$"
 PLACED_BOX_CHAR="*"
@@ -472,6 +473,9 @@ LEVEL.initializeFromData = function(levelData)
 			else if levelChar == PLAYER_CHAR then
 				// Represents the worker (player)
 				workerPosition = position
+			else if levelChar == PLAYER_ON_TARGET_CHAR then
+				workerPosition = position
+				targetTilePositions.push position
 			end if	
 			
 			col = col + 1
