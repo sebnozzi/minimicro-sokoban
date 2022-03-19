@@ -2,22 +2,35 @@
 // Define some variables
 
 // Define some constants
-TILESHEET_FILE = "sokoban_tilesheet.png"
+TILESHEET_FILE_NAME = "sokoban_tilesheet.png"
 
 // -- Size of tiles to *display*
 TILE_SIZE = 32
 // -- Size of tiles in the *tilesheet* file
 TILESHEET_TILE_SIZE = 64
 
+// Load tilesheet
+tileSheet = file.loadImage(TILESHEET_FILE_NAME)
+
 // Define displays
+clear
 
 // -- Setup sprites display
 sprtDisp = display(4)
+
+// -- Setup tile display
+display(6).mode = displayMode.tile
+tileDisp = display(6)
+tileDisp.tileSet = tileSheet
+tileDisp.extent = [20,11]
+tileDisp.tileSetTileSize = TILESHEET_TILE_SIZE
+tileDisp.cellSize = TILE_SIZE
 
 clearDisplays = function()
 	gfx.clear
 	text.clear
 	sprtDisp.clear
+	tileDsp.clear
 	text.row = 25
 end function
 
@@ -44,7 +57,7 @@ end function
 
 // Load tilesheet file
 sokobanTiles = {}
-sokobanTiles.images = file.loadImage(TILESHEET_FILE)
+sokobanTiles.images = tileSheet
 sokobanTiles.tileSize = TILESHEET_TILE_SIZE
 sokobanTiles.getImageAt = function(col,row)
 	img = self.images.getImage(
@@ -85,7 +98,7 @@ LEVEL.worker = null
 
 StructureTile = {}
 StructureTile.position = new Position
-StructureTile.img = null
+StructureTile.tileIdx = 0
 StructureTile.tileSize = function()
 	return LEVEL.tileSize
 end function
@@ -93,12 +106,11 @@ StructureTile.canBeMovedInto = false
 StructureTile.isTargetTile = false
 StructureTile.isFloorTile = false
 StructureTile.isWallTile = false
-StructureTile.drawFromOrigin = function()
+StructureTile.setTileCell = function()
 	col = self.position.col
 	row = self.position.row
-	x = LEVEL.originX+col*self.tileSize
-	y = LEVEL.originY+row*self.tileSize
-	gfx.drawImage self.img,x,y,self.tileSize,self.tileSize
+	tileIdx = self.tileIdx
+	tileDisp.setCell col,row,tileIdx
 end function
 // TODO: code duplication with LevelSprite
 StructureTile.isAtPosition = function(position)
@@ -106,24 +118,16 @@ StructureTile.isAtPosition = function(position)
 end function
 
 WallTile = new StructureTile
-WallTile.img = sokobanTiles.wallImg
+WallTile.tileIdx = 6*13+6
 WallTile.isWallTile = true
-WallTile.drawFromOrigin = function()
-	col = self.position.col
-	row = self.position.row
-	x = LEVEL.originX+col*self.tileSize
-	y = LEVEL.originY+row*self.tileSize
-	gfx.drawImage sokobanTiles.floorImg,x,y,self.tileSize,self.tileSize
-	super.drawFromOrigin
-end function
 
 FloorTile = new StructureTile
-FloorTile.img = sokobanTiles.floorImg
+FloorTile.tileIdx = 6*13+11
 FloorTile.isFloorTile = true
 FloorTile.canBeMovedInto = true
 
 TargetTile = new FloorTile
-TargetTile.img = sokobanTiles.targetImg
+TargetTile.tileIdx = 7*13+11
 TargetTile.isTargetTile = true
 
 // Adding structure tiles
@@ -260,7 +264,7 @@ end function
 LEVEL.drawTiles = function()
 	// Draw the individual tiles
 	for tile in self.structureTiles.values
-		tile.drawFromOrigin
+		tile.setTileCell
 	end for
 end function
 
@@ -399,10 +403,10 @@ floodWithFloorTiles = function(level,position)
 	else
 		level.addFloorAt position
 	end if
-	floodWithFloorTiles(level,position.shiftedByOneInDirection(up))
-	floodWithFloorTiles(level,position.shiftedByOneInDirection(down))
-	floodWithFloorTiles(level,position.shiftedByOneInDirection(left))
-	floodWithFloorTiles(level,position.shiftedByOneInDirection(right))
+	floodWithFloorTiles level,position.shiftedByOneInDirection(up)
+	floodWithFloorTiles level,position.shiftedByOneInDirection(down)
+	floodWithFloorTiles level,position.shiftedByOneInDirection(left)
+	floodWithFloorTiles level,position.shiftedByOneInDirection(right)
 end function
 
 placeTargetTiles = function(level, targetTilePositions)
@@ -411,15 +415,30 @@ placeTargetTiles = function(level, targetTilePositions)
 	end for
 end function
 
-adjustTileSize = function(newSize)
+adjustDisplayObjects = function(colCount,rowCount)
+	if rowCount > 12 then
+		newSize = 36
+	else 
+		newSize = 48
+	end if 
+	// Adjust cell sizes
 	LEVEL.tileSize = newSize
 	LevelSprite.scale = newSize / TILESHEET_TILE_SIZE
+	tileDisp.cellSize = newSize
+	// Adjust map size
+	tileDisp.extent = [colCount,rowCount]
+	// Center tile display
+	mapWidth = tileDisp.extent[0]*tileDisp.cellSize
+	mapHeight = tileDisp.extent[1]*tileDisp.cellSize
+	tileDisp.scrollX = -((960-mapWidth) / 2)
+	tileDisp.scrollY = -((640-mapHeight) / 2)
 end function
 
 LEVEL.initializeFromData = function(levelData)
 	// Reset fields
 	self.boxes = []
 	self.structureTiles = {}
+	
 	// Initialize level dimensions
 	self.rowCount=len(levelData)
 	for levelLine in levelData
@@ -430,12 +449,8 @@ LEVEL.initializeFromData = function(levelData)
 		end if
 	end for
 	
-	// Adjust tile size
-	if self.rowCount > 12 then
-		adjustTileSize(36)
-	else 
-		adjustTileSize(48)
-	end if 
+	// Adjust tiles and sprites sizes derived from level dimensions
+	adjustDisplayObjects self.colCount,self.rowCount
 	
 	// Variables to accumulate objects
 	targetTilePositions = []
@@ -519,7 +534,7 @@ playLevel = function(levelData,beforePlayingCallback=null)
 	LEVEL.initializeFromData(levelData)
 	
 	if beforePlayingCallback != null then
-		beforPlayingCallback
+		beforePlayingCallback
 	end if
 	
 	key.clear
