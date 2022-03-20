@@ -27,10 +27,10 @@ tileDisp.tileSetTileSize = TILESHEET_TILE_SIZE
 tileDisp.cellSize = TILE_SIZE
 
 clearDisplays = function()
-	gfx.clear
+	gfx.clear color.clear
 	text.clear
 	sprtDisp.clear
-	tileDsp.clear
+	tileDisp.clear
 	text.row = 25
 end function
 
