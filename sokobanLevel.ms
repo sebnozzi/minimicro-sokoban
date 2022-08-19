@@ -304,10 +304,12 @@ LevelSprite.moveTo = function(position)
 		previousPosition = obj.position
 		previousX = obj.x
 		previousY = obj.y
+		previousImg = obj.image
 		undoAction = function()
 			obj.position = previousPosition
 			obj.x = previousX
 			obj.y = previousY
+			obj.image = previousImg
 		end function
 		Actions.queue @undoAction
 	end if
@@ -647,7 +649,7 @@ if globals == locals then
 	"  ###   ##", 
 	"  #      #",
 	"### # ## #   ######", 
-	"#   # ## #####  **#", 
+	"#   # ## ##### $.*#", 
 	"#             $ .*#",
 	"##### ### #@##  **#", 
 	"    #     #########", 
