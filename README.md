@@ -48,9 +48,7 @@ Move the worker with the arrow keys.
 
 The goal for each level is to bring all boxes into the designated target tiles.
 
-IMPORTANT: During gameplay press "R" (key "r") to <b><u>R</u></b>estart the level if you get stuck.
-
-Press "Q" to quit.
+IMPORTANT: During gameplay press "Z" (key "z") to un-do your last move or "R" (key "r") to restart the level if you get stuck.
 
 # Credits
 
