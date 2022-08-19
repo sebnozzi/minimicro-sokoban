@@ -276,6 +276,12 @@ LEVEL.reset = function()
 	for box in self.boxes
 		box.moveToInitialPosition
 	end for
+	Actions.clear
+end function
+
+// Undoing the last action
+LEVEL.undo = function()
+	Actions.undo
 end function
 
 // Create level-sprite superclass with common behaviour
@@ -291,6 +297,22 @@ LevelSprite.position = new Position
 LevelSprite.initialPosition = new Position
 LevelSprite.canBeMovedInto = false
 LevelSprite.moveTo = function(position)
+	// Register "undo" action
+	if self.position then
+		// Capture "self" for later use
+		obj = self
+		previousPosition = obj.position
+		previousX = obj.x
+		previousY = obj.y
+		undoAction = function()
+			obj.position = previousPosition
+			obj.x = previousX
+			obj.y = previousY
+		end function
+		Actions.queue @undoAction
+	end if
+	
+	// Perform the action itself
 	self.position = position
 	self.x = LEVEL.originX+LEVEL.tileSize*position.col+LEVEL.tileSize/2
 	self.y = LEVEL.originY+LEVEL.tileSize*position.row+LEVEL.tileSize/2	
@@ -373,6 +395,8 @@ WorkerSprite.move = function(direction)
 	
 	nextPosition = self.nextPositionInDirection(direction)
 	
+	Actions.beginTransaction
+	
 	objectAtNextPosition = LEVEL.getLevelObjectAt(nextPosition)
 	// Tell object to move to desired direction
 	// Object _might_ ignore this request, e.g. a box cannot be moved
@@ -382,6 +406,52 @@ WorkerSprite.move = function(direction)
 	if LEVEL.hasFreeTileAt(nextPosition) then
 		super.move direction
 	end if
+	
+	Actions.endTransaction
+	
+end function
+
+// Actions
+// This is used for "undo"-support
+// Actions will be queued and it is possible to roll them back
+
+Actions = {}
+Actions.actions = []
+Actions.trackingBuffer = []
+Actions.tracking = false
+Actions.beginTransaction = function()
+	self.trackingBuffer = [] 
+	self.tracking = true
+end function
+Actions.endTransaction = function()
+	// Build a function that executes the accumulated changes
+	queuedActions = []
+	for reversedIdx in range(len(self.trackingBuffer)-1,0,-1)
+		queuedAction = self.trackingBuffer[reversedIdx]
+		queuedActions.push @queuedAction
+	end for
+	fn = function()
+		for qa in queuedActions
+			qa()
+		end for
+	end function
+	// Register composite action
+	self.actions.push @fn
+	// Clear buffer and change mode
+	self.trackingBuffer = []
+	self.tracking = false
+end function
+Actions.queue = function(actionRef)
+	self.trackingBuffer.push @actionRef
+end function
+Actions.undo = function()
+	if len(self.actions) > 0 then
+		action = self.actions.pop
+		action()
+	end if
+end function
+Actions.clear = function()
+	self.actions = []
 end function
 
 // Process level data
@@ -547,6 +617,8 @@ playLevel = function(levelData,beforePlayingCallback=null)
 		else if pressedKey == "r" then
 			// Reset the game
 			LEVEL.reset
+		else if pressedKey == "z" then
+			LEVEL.undo
 		else if keyCode == KEY_LEFT then
 			LEVEL.worker.moveLeft
 		else if keyCode == KEY_RIGHT then
