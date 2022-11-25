@@ -297,19 +297,20 @@ LevelSprite.position = new Position
 LevelSprite.initialPosition = new Position
 LevelSprite.canBeMovedInto = false
 LevelSprite.moveTo = function(position)
-	// Register "undo" action
-	if self.position then
+	
+	// Register "undo" action.
+	// Only do this if sprite already placed and the new
+	// position is different than the current one.
+	if self.position and self.position != position then
 		// Capture "self" for later use
 		obj = self
 		previousPosition = obj.position
 		previousX = obj.x
 		previousY = obj.y
-		previousImg = obj.image
 		undoAction = function()
 			obj.position = previousPosition
 			obj.x = previousX
 			obj.y = previousY
-			obj.image = previousImg
 		end function
 		Actions.queue @undoAction
 	end if
@@ -384,20 +385,14 @@ end function
 
 WorkerSprite = new LevelSprite
 WorkerSprite.image = sokobanTiles.workerImgDown
+WorkerSprite.direction = down
 WorkerSprite.move = function(direction)
-	if direction == up then
-		self.image = sokobanTiles.workerImgUp
-	else if direction == down then
-		self.image = sokobanTiles.workerImgDown
-	else if direction == left then 
-		self.image = sokobanTiles.workerImgLeft
-	else if direction == right then
-		self.image = sokobanTiles.workerImgRight
-	end if
-	
-	nextPosition = self.nextPositionInDirection(direction)
 	
 	Actions.beginTransaction
+	
+	self.rotateInDirection direction
+	
+	nextPosition = self.nextPositionInDirection(direction)
 	
 	objectAtNextPosition = LEVEL.getLevelObjectAt(nextPosition)
 	// Tell object to move to desired direction
@@ -413,6 +408,33 @@ WorkerSprite.move = function(direction)
 	
 end function
 
+WorkerSprite.rotateInDirection = function(direction)
+	if self.direction != direction then
+		
+		// Register undo action
+		workerSelf = self
+		previousImage = self.image
+		previousDirection = self.direction
+		undoAction = function
+			workerSelf.image = previousImage
+			workerSelf.direction = previousDirection
+		end function
+		Actions.queue @undoAction
+		
+		// Perform rotation
+		self.direction = direction
+		if direction == up then
+			self.image = sokobanTiles.workerImgUp
+		else if direction == down then
+			self.image = sokobanTiles.workerImgDown
+		else if direction == left then 
+			self.image = sokobanTiles.workerImgLeft
+		else if direction == right then
+			self.image = sokobanTiles.workerImgRight
+		end if		
+	end if
+end function
+
 // Actions
 // This is used for "undo"-support
 // Actions will be queued and it is possible to roll them back
@@ -420,28 +442,29 @@ end function
 Actions = {}
 Actions.actions = []
 Actions.trackingBuffer = []
-Actions.tracking = false
 Actions.beginTransaction = function()
 	self.trackingBuffer = [] 
-	self.tracking = true
 end function
 Actions.endTransaction = function()
-	// Build a function that executes the accumulated changes
-	queuedActions = []
-	for reversedIdx in range(len(self.trackingBuffer)-1,0,-1)
-		queuedAction = self.trackingBuffer[reversedIdx]
-		queuedActions.push @queuedAction
-	end for
-	fn = function()
-		for qa in queuedActions
-			qa()
+	
+	if self.trackingBuffer then
+		// Build a function that executes the accumulated changes
+		queuedActions = []
+		for reversedIdx in range(len(self.trackingBuffer)-1,0,-1)
+			queuedAction = self.trackingBuffer[reversedIdx]
+			queuedActions.push @queuedAction
 		end for
-	end function
-	// Register composite action
-	self.actions.push @fn
+		fn = function()
+			for qa in queuedActions
+				qa()
+			end for
+		end function
+		// Register composite action
+		self.actions.push @fn
+	end if
+	
 	// Clear buffer and change mode
 	self.trackingBuffer = []
-	self.tracking = false
 end function
 Actions.queue = function(actionRef)
 	self.trackingBuffer.push @actionRef
