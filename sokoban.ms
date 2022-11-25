@@ -73,8 +73,13 @@ showLevelText = function(levelNr)
 	textOverlayDisp.print(
 	"Level "+levelNr,
 	820,10,
-	color.gray,
+	color.silver,
 	"normal")
+end function
+
+showKeyboardHints = function
+	textOverlayDisp.print("R-Restart  Z-Undo",30,10, color.gray,"normal")
+	textOverlayDisp.print("R          Z",30,10, color.silver,"normal")	
 end function
 
 // === Play modes ===
@@ -123,6 +128,7 @@ playLevel = function(levelNr)
 	beforePlaying = function()
 		textOverlayDisp.clear
 		showLevelText(levelNr)
+		showKeyboardHints
 	end function
 	
 	levelIdx = levelNr - 1
