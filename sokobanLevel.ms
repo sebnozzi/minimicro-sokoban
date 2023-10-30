@@ -361,12 +361,30 @@ BoxSprite.beUnplaced = function()
 	self.isPlaced = false
 end function
 BoxSprite.updatePlacedState = function()
+	// Save current state for later
+	wasPlaced = self.isPlaced
+	
 	// Be placed only if we are on a target-tile
 	if LEVEL.hasTargetTileAt(self.position) then
 		self.bePlaced
 	else
 		self.beUnplaced
 	end if
+	
+	// Only do if there was a change
+	if wasPlaced != self.isPlaced then
+		// Build and register undo action
+		box = self
+		undoAction = function
+			if wasPlaced then
+				box.bePlaced
+			else
+				box.beUnplaced
+			end if
+		end function
+		Actions.queue @undoAction
+	end if
+	
 end function
 BoxSprite.move = function(direction)
 	nextPosition = self.nextPositionInDirection(direction)	
