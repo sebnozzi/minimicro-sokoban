@@ -464,11 +464,14 @@ end function
 
 Actions = {}
 Actions.actions = []
+Actions.inTransaction = false
 Actions.trackingBuffer = []
 Actions.beginTransaction = function()
+	self.inTransaction = true
 	self.trackingBuffer = [] 
 end function
 Actions.endTransaction = function()
+	self.inTransaction = false
 	
 	if self.trackingBuffer then
 		// Build a function that executes the accumulated changes
@@ -490,7 +493,9 @@ Actions.endTransaction = function()
 	self.trackingBuffer = []
 end function
 Actions.queue = function(actionRef)
-	self.trackingBuffer.push @actionRef
+	if self.inTransaction then
+		self.trackingBuffer.push @actionRef
+	end if
 end function
 Actions.undo = function()
 	if len(self.actions) > 0 then
