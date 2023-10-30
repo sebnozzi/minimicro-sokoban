@@ -376,7 +376,7 @@ BoxSprite.move = function(direction)
 		super.move direction
 	end if
 	
-	self.updatePlacedState()
+	self.updatePlacedState	
 end function
 BoxSprite.moveToInitialPosition = function()
 	super.moveToInitialPosition
