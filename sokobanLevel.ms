@@ -453,6 +453,11 @@ WorkerSprite.rotateInDirection = function(direction)
 	end if
 end function
 
+WorkerSprite.moveToInitialPosition = function
+	super.moveToInitialPosition
+	self.rotateInDirection down
+end function
+
 // Actions
 // This is used for "undo"-support
 // Actions will be queued and it is possible to roll them back
